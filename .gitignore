@@ -1,7 +1,36 @@
-db.sqlite3
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Virtual environments
 venv/
+env/
+ENV/
 .venv/
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+staticfiles/
+media/
+
+# Environment / secrets
+.env
+.env.*
+*.env
+
+# Data files
+*.csv
+query_result_*.csv
+
+# macOS
 .DS_Store
+
+# IDE / editors
+.vscode/
 .idea/
+*.swp

@@ -1,0 +1,63 @@
+{% extends "layout/body.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h2 class="mb-4">📤 Bulk Upload</h2>
+
+    {% if messages %}
+        {% for m in messages %}
+            <div class="alert alert-{{ m.tags|default:'info' }}">{{ m }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label for="identifier" class="form-label fw-semibold">
+                        Identifier <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" name="identifier" id="identifier"
+                           class="form-control" required
+                           placeholder="e.g. oct-2025-batch1">
+                    <div class="form-text">
+                        Unique name for this upload. You will select it later from the List page.
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="csv_file" class="form-label fw-semibold">
+                        CSV File <span class="text-danger">*</span>
+                    </label>
+                    <input type="file" name="csv_file" id="csv_file"
+                           accept=".csv" class="form-control" required>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input type="checkbox" name="overwrite" id="overwrite"
+                           class="form-check-input">
+                    <label for="overwrite" class="form-check-label">
+                        Overwrite existing data if identifier already exists
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-cloud-upload"></i> Upload &amp; Save
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {% if recent_identifiers %}
+    <h6 class="text-muted">Recently used identifiers</h6>
+    <div>
+        {% for id in recent_identifiers %}
+            <a href="/orders/display/?identifier={{ id }}"
+               class="badge bg-secondary text-decoration-none me-1 mb-1">{{ id }}</a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "layout/body.html" %}
+{% load dict_filters %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h2 class="mb-3">📋 Display Orders</h2>
+
+    <form method="get" class="row g-3 mb-4 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Identifier</label>
+            <select name="identifier" class="form-select" onchange="this.form.submit()">
+                <option value="">— select —</option>
+                {% for id in all_ids %}
+                    <option value="{{ id }}" {% if id == identifier %}selected{% endif %}>
+                        {{ id }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Apply</button>
+        </div>
+    </form>
+
+    {% if not identifier %}
+        <div class="alert alert-warning">Please select an identifier above.</div>
+    {% elif page_obj %}
+        <div class="mb-2">
+            Showing <strong>{{ total_orders|floatformat:"0" }}</strong>
+            rows for <code>{{ identifier }}</code>
+            &nbsp;|&nbsp; Columns: <strong>{{ columns|length }}</strong>
+        </div>
+
+        <div class="table-responsive" style="max-height: 75vh; overflow: auto;">
+            <table class="table table-hover table-sm align-middle">
+                <thead class="table-light" style="position: sticky; top: 0; z-index: 2;">
+                    <tr>
+                        {% for col in columns %}
+                            <th style="white-space: nowrap;">{{ col }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for o in page_obj %}
+                    <tr>
+                        {% for col in columns %}
+                            <td>{{ o.raw|get_item:col|default:"—" }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="{{ columns|length|default:1 }}" class="text-center text-muted">
+                            No rows.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <nav>
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?identifier={{ identifier }}&page={{ page_obj.previous_page_number }}">
+                           ← Prev
+                        </a>
+                    </li>
+                {% endif %}
+                <li class="page-item disabled">
+                    <span class="page-link">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?identifier={{ identifier }}&page={{ page_obj.next_page_number }}">
+                           Next →
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+{% endblock %}

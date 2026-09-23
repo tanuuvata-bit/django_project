@@ -1,0 +1,71 @@
+{% extends "layout/body.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h2 class="mb-4">📂 Dataset List</h2>
+
+    {% if messages %}
+        {% for m in messages %}
+            <div class="alert alert-{{ m.tags|default:'info' }}">{{ m }}</div>
+        {% endfor %}
+    {% endif %}
+
+    {% if identifiers %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" action="/orders/display/">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Select an identifier</label>
+                        <select name="identifier" class="form-select" required>
+                            <option value="">— choose a dataset —</option>
+                            {% for item in identifiers %}
+                                <option value="{{ item.identifier }}">
+                                    {{ item.identifier }} ({{ item.count }} rows)
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary w-100">
+                            Display Orders →
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <table class="table table-hover">
+        <thead class="table-light">
+            <tr>
+                <th>Identifier</th><th>Rows</th>
+                <th>Uploaded</th><th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in identifiers %}
+            <tr>
+                <td><code>{{ item.identifier }}</code></td>
+                <td>{{ item.count }}</td>
+                <td>{{ item.uploaded_at|date:"Y-m-d H:i" }}</td>
+                <td class="text-end">
+                    <a href="/orders/display/?identifier={{ item.identifier }}"
+                       class="btn btn-sm btn-outline-primary">Display</a>
+                    <a href="{% url 'delete_identifier' item.identifier %}"
+                       class="btn btn-sm btn-outline-danger"
+                       onclick="return confirm('Delete ALL rows for {{ item.identifier }}?')">
+                       Delete
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <div class="alert alert-info">
+            No uploads yet. <a href="{% url 'bulk_upload' %}">Upload your first CSV</a>.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
