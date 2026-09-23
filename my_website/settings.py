@@ -37,7 +37,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'my_website',
 ]
+# INSTALLED_APPS = [    this is what the structure should be
+#     'django.contrib.admin',
+#     'django.contrib.auth',
+#     'django.contrib.contenttypes',
+#     'django.contrib.sessions',
+#     'django.contrib.messages',
+#     'django.contrib.staticfiles',
+#     'my_website',       # ← must be here
+# ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -115,8 +125,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/dev/howto/static-files/
 
-STATIC_URL = 'static/'
-
+#STATIC_URL = '/static/'
+STATIC_URL = '/assets/'
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
 
 # Email
 # https://docs.djangoproject.com/en/dev/topics/email/#topic-email-configuration
@@ -126,3 +139,13 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
+
+# ============================================================
+# MongoDB via MongoEngine
+# ============================================================
+import mongoengine
+
+mongoengine.connect(
+    db='my_django_db',
+    host='mongodb://localhost:27017/my_django_db'
+)
