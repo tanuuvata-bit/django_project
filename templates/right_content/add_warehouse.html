@@ -1,0 +1,214 @@
+```html
+{% extends 'layout/index.html' %}
+
+{% block content %}
+
+<!-- Content -->
+<div class="container-xxl flex-grow-1 container-p-y">
+
+  <!-- Basic Layout -->
+  <div class="row mb-6 gy-6">
+
+    <div class="col-12">
+      <div class="card">
+      </div>
+    </div>
+
+    <div class="col-xl">
+      <div class="card">
+
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Add Warehouse</h5>
+          <small class="text-body float-end">Warehouse Details</small>
+        </div>
+
+        <div class="card-body">
+          <form method="POST" action="{% url 'add_warehouse' %}">
+             {% csrf_token %}
+
+            <!-- Warehouse ID -->
+            <div class="mb-12">
+              <label class="form-label" for="warehouse_id">Warehouse ID</label>
+
+              <div class="input-group input-group-merge">
+                <span id="warehouse-id-icon" class="input-group-text">
+                  <i class="icon-base bx bx-buildings"></i>
+                </span>
+
+                <input
+                  type="text"
+                  class="form-control"
+                  id="warehouse_id"
+                  name="warehouse_id"
+                  placeholder="WH-NORTH-01"
+                  aria-label="WH-NORTH-01"
+                  aria-describedby="warehouse-id-icon"
+                />
+              </div>
+            </div>
+
+            <!-- Warehouse Name -->
+            <div class="mb-6">
+              <label class="form-label" for="warehouse_name">
+                Warehouse Name
+              </label>
+
+              <div class="input-group input-group-merge">
+                <span id="warehouse-name-icon" class="input-group-text">
+                  <i class="icon-base bx bx-home"></i>
+                </span>
+
+                <input
+                  type="text"
+                  id="warehouse_name"
+                  name="warehouse_name"
+                  class="form-control"
+                  placeholder="Central Hub North"
+                  aria-label="Central Hub North"
+                  aria-describedby="warehouse-name-icon"
+                />
+              </div>
+            </div>
+
+            <!-- Location Address -->
+            <div class="mb-6">
+              <label class="form-label" for="location_address">
+                Location Address
+              </label>
+
+              <div class="input-group input-group-merge">
+                <span id="location-address-icon" class="input-group-text">
+                  <i class="icon-base bx bx-map"></i>
+                </span>
+
+                <textarea
+                  id="location_address"
+                  name="location_address"
+                  class="form-control"
+                  placeholder="Enter street address or landmark"
+                  aria-label="Location Address"
+                  aria-describedby="location-address-icon"
+                  rows="3"
+                ></textarea>
+              </div>
+            </div>
+
+
+
+
+            <!-- Assigned Vehicles -->
+            <div class="mb-6">
+              <label class="form-label" for="assigned_vehicle_ids">
+                Assigned Vehicles
+              </label>
+
+              <div class="input-group input-group-merge">
+                <span id="assigned-vehicles-icon" class="input-group-text">
+                  <i class="icon-base bx bx-car"></i>
+                </span>
+
+                <select
+                  id="assigned_vehicle_ids"
+                  name="assigned_vehicle_ids"
+                  class="form-select"
+                  multiple
+                  aria-label="Assigned Vehicles"
+                  aria-describedby="assigned-vehicles-icon"
+                >
+                  <option value="VEH-101">VEH-101</option>
+                  <option value="VEH-102">VEH-102</option>
+                  <option value="VEH-103">VEH-103</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Assigned Pickers -->
+            <div class="mb-6">
+              <label class="form-label" for="assigned_picker_ids">
+                Assigned Pickers
+              </label>
+
+              <div class="input-group input-group-merge">
+                <span id="assigned-pickers-icon" class="input-group-text">
+                  <i class="icon-base bx bx-group"></i>
+                </span>
+
+                <select
+                  id="assigned_picker_ids"
+                  name="assigned_picker_ids"
+                  class="form-select"
+                  multiple
+                  aria-label="Assigned Pickers"
+                  aria-describedby="assigned-pickers-icon"
+                >
+                  <option value="picker_1">Picker 1</option>
+                  <option value="picker_2">Picker 2</option>
+                  <option value="picker_3">Picker 3</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Manager / Contact -->
+            <div class="mb-6">
+              <label class="form-label" for="manager_contact">
+                Manager / Contact
+              </label>
+
+              <div class="input-group input-group-merge">
+                <span id="manager-contact-icon" class="input-group-text">
+                  <i class="icon-base bx bx-user"></i>
+                </span>
+
+                <input
+                  type="text"
+                  id="manager_contact"
+                  name="manager_contact"
+                  class="form-control"
+                  placeholder="Manager Name / Phone Number"
+                  aria-label="Manager Name / Phone Number"
+                  aria-describedby="manager-contact-icon"
+                />
+              </div>
+            </div>
+
+            <!-- Operating Status -->
+            <div class="mb-6">
+              <label class="form-label" for="is_active">
+                Operating Status
+              </label>
+
+              <div class="input-group input-group-merge">
+                <span id="status-icon" class="input-group-text">
+                  <i class="icon-base bx bx-check-circle"></i>
+                </span>
+
+                <select
+                  id="is_active"
+                  name="is_active"
+                  class="form-select"
+                  aria-label="Operating Status"
+                  aria-describedby="status-icon"
+                >
+                  <option value="true" selected>Active</option>
+                  <option value="false">Temporarily Closed</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary">
+              Add Warehouse
+            </button>
+
+          </form>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+```
+

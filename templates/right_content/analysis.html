@@ -1,0 +1,212 @@
+{% extends "layout/body.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+  <h3 class="mb-4">📊 Analysis</h3>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Select Identifier</label>
+          <select id="fileSelect" class="form-select">
+            <option value="">— select —</option>
+            {% for id in identifiers %}
+              <option value="{{ id }}">{{ id }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <button id="runBtn" class="btn btn-primary w-100" disabled>
+            <span id="btnText">Run Analysis</span>
+            <span id="btnSpinner" class="spinner-border spinner-border-sm d-none ms-2"></span>
+          </button>
+        </div>
+        <div class="col-md-3">
+          <div id="statusBox" class="text-muted small"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="charts" class="row g-4 d-none">
+
+    <div class="col-md-6">
+      <div class="card shadow-sm p-3">
+        <h6>Status Distribution</h6>
+        <div id="chartStatus"></div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card shadow-sm p-3">
+        <h6>Top Cities</h6>
+        <div id="chartCities"></div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card shadow-sm p-3">
+        <h6>Top States</h6>
+        <div id="chartStates"></div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card shadow-sm p-3">
+        <h6>Monthly Counts</h6>
+        <div id="chartMonthly"></div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card shadow-sm p-3">
+        <h6>Peak Order Hours</h6>
+        <div id="chartHours"></div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card shadow-sm p-3">
+        <h6>Cancellations by Month</h6>
+        <div id="chartCancel"></div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="card shadow-sm p-3">
+        <h6>Processing Time Distribution</h6>
+        <div id="chartProcTime"></div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="card shadow-sm p-3">
+        <h6>Geographic Distribution</h6>
+        <div id="chartGeo"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+<script>
+const fileSelect  = document.getElementById("fileSelect");
+const runBtn      = document.getElementById("runBtn");
+const btnText     = document.getElementById("btnText");
+const btnSpinner  = document.getElementById("btnSpinner");
+const statusBox   = document.getElementById("statusBox");
+const chartsDiv   = document.getElementById("charts");
+
+fileSelect.addEventListener("change", () => {
+  runBtn.disabled = !fileSelect.value;
+});
+
+runBtn.addEventListener("click", async () => {
+  const id = fileSelect.value;
+  if (!id) return;
+
+  runBtn.disabled = true;
+  btnText.textContent = "Analyzing...";
+  btnSpinner.classList.remove("d-none");
+  statusBox.textContent = "Computing aggregations (may take 5–15s)...";
+  chartsDiv.classList.add("d-none");
+
+  try {
+    const r = await fetch(`/api/summary/${id}/`);
+    if (!r.ok) throw new Error(`Server error: ${r.status}`);
+    const data = await r.json();
+    if (data.error) throw new Error(data.error);
+
+    const p = data.phases || {};
+    chartsDiv.classList.remove("d-none");
+    statusBox.textContent = `✅ Done — ${data.meta.rows.toLocaleString()} rows analyzed`;
+
+    if (p.status_distribution)   renderDonut("chartStatus",   p.status_distribution);
+    if (p.top_cities)            renderBar("chartCities",     p.top_cities, true);
+    if (p.top_states)            renderBar("chartStates",     p.top_states, true);
+    if (p.monthly_counts)        renderLine("chartMonthly",   p.monthly_counts);
+    if (p.peak_hours)            renderArea("chartHours",     p.peak_hours);
+    if (p.cancellation_by_month) renderLineCancel("chartCancel", p.cancellation_by_month);
+    if (p.processing_time_hist)  renderBar("chartProcTime",   p.processing_time_hist, false);
+    if (p.geo_points && p.geo_points.lat && p.geo_points.lat.length) {
+      renderGeo(p.geo_points);
+    }
+
+  } catch (e) {
+    statusBox.textContent = "❌ " + e.message;
+  } finally {
+    runBtn.disabled = false;
+    btnText.textContent = "Run Analysis";
+    btnSpinner.classList.add("d-none");
+  }
+});
+
+// ---------- Renderers (same as before) ----------
+function renderDonut(elId, {labels, values}) {
+  new ApexCharts(document.getElementById(elId), {
+    chart: { type: "donut", height: 320 },
+    series: values, labels: labels, legend: { position: "bottom" }
+  }).render();
+}
+
+function renderBar(elId, {labels, values}, horizontal) {
+  new ApexCharts(document.getElementById(elId), {
+    chart: { type: "bar", height: 340 },
+    series: [{ name: "Count", data: values }],
+    xaxis: { categories: labels },
+    plotOptions: { bar: { horizontal: !!horizontal, borderRadius: 3 } },
+    dataLabels: { enabled: false }
+  }).render();
+}
+
+function renderLine(elId, {labels, values}) {
+  new ApexCharts(document.getElementById(elId), {
+    chart: { type: "line", height: 340, zoom: { enabled: false } },
+    series: [{ name: "Count", data: values }],
+    xaxis: { categories: labels },
+    stroke: { curve: "smooth", width: 3 },
+    markers: { size: 4 }
+  }).render();
+}
+
+function renderLineCancel(elId, {labels, values}) {
+  new ApexCharts(document.getElementById(elId), {
+    chart: { type: "line", height: 340, zoom: { enabled: false } },
+    series: [{ name: "Cancellations", data: values }],
+    xaxis: { categories: labels },
+    stroke: { curve: "smooth", width: 3 },
+    colors: ["#ef4444"],
+    markers: { size: 4 }
+  }).render();
+}
+
+function renderArea(elId, {labels, values}) {
+  new ApexCharts(document.getElementById(elId), {
+    chart: { type: "area", height: 340 },
+    series: [{ name: "Orders", data: values }],
+    xaxis: { categories: labels },
+    stroke: { curve: "smooth", width: 2 },
+    fill: { type: "gradient" }
+  }).render();
+}
+
+function renderGeo({lat, lon}) {
+  const trace = {
+    type: "scattermapbox", mode: "markers",
+    lat: lat, lon: lon,
+    marker: { size: 6, color: "#6366f1", opacity: 0.6 },
+    hoverinfo: "skip"
+  };
+  Plotly.newPlot("chartGeo", [trace], {
+    mapbox: { style: "open-street-map", zoom: 4, center: { lat: lat[0], lon: lon[0] } },
+    margin: { t: 0, b: 0, l: 0, r: 0 },
+    height: 500
+  }, { displayModeBar: false });
+}
+</script>
+{% endblock %}

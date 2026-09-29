@@ -1,5 +1,9 @@
 from django.shortcuts import render
 from pymongo import MongoClient
+from django.http import JsonResponse
+from bson import ObjectId
+from django.core.cache import cache
+from django_admin.models import OrderRecord
 
 def index(request):
     return render(request, 'layout/body.html')
@@ -60,6 +64,8 @@ def list_hubs(request):
 def pin_code(request):
     return render(request, 'right_content/pin_code.html')
 
+
+
 # def display_data(request):
 #     # Connect to MongoDB
 #     client = MongoClient('mongodb://localhost:27017/')
@@ -81,9 +87,7 @@ def display_data(request):
 
     return render(request, 'right_content/display.html', {'records': records})
 
-# ============================================================
 # NEW: Bulk Upload / List / Display Orders
-# ============================================================
 import csv
 import io
 from datetime import datetime
@@ -335,3 +339,182 @@ def delete_identifier(request, identifier):
     return redirect("list_identifiers")
 
 
+# ============================================================
+# VEHICLES — list + delete
+# ============================================================
+def list_vehicles(request):
+    vehicles = Vehicle.objects().order_by("-created_at")
+    return render(request, "right_content/list_vehicles.html", {
+        "vehicles": vehicles,
+    })
+
+
+def delete_vehicle(request, vehicle_id):
+    try:
+        v = Vehicle.objects(id=ObjectId(vehicle_id)).first()
+        if v:
+            v.delete()
+            messages.success(request, "Vehicle deleted.")
+        else:
+            messages.warning(request, "Vehicle not found.")
+    except Exception as e:
+        messages.error(request, f"Failed to delete: {e}")
+    return redirect("list_vehicles")
+
+
+# ============================================================
+# WAREHOUSES — list + delete
+# ============================================================
+def list_warehouses(request):
+    warehouses = Warehouse.objects().order_by("-created_at")
+    return render(request, "right_content/list_warehouses.html", {
+        "warehouses": warehouses,
+    })
+
+
+def delete_warehouse(request, warehouse_id):
+    try:
+        w = Warehouse.objects(id=ObjectId(warehouse_id)).first()
+        if w:
+            w.delete()
+            messages.success(request, "Warehouse deleted.")
+        else:
+            messages.warning(request, "Warehouse not found.")
+    except Exception as e:
+        messages.error(request, f"Failed to delete: {e}")
+    return redirect("list_warehouses")
+
+# ============================================================
+# ANALYSIS PAGE
+# ============================================================
+from my_website.analytics.engine import analyze_identifier
+from django.core.cache import cache
+
+
+def analysis_page(request):
+    """Renders the ANALYSIS page + dropdown of uploaded identifiers."""
+    identifiers = sorted(OrderRecord.objects.distinct("identifier"))
+    return render(request, "right_content/analysis.html", {
+        "identifiers": identifiers,
+    })
+
+
+
+# API: Synchronous summary generation
+def api_analysis_summary(request, identifier):
+    """
+    Runs the analysis synchronously and returns JSON.
+    Caches the result for 1 hour to avoid recomputation.
+    """
+    cache_key = f"analysis_summary:{identifier}"
+    cached = cache.get(cache_key)
+    if cached:
+        return JsonResponse(cached)
+
+    try:
+        summary = analyze_identifier(identifier)
+    except Exception as e:
+        return JsonResponse({"error": str(e)[:500]}, status=500)
+
+    cache.set(cache_key, summary, timeout=3600)
+    return JsonResponse(summary)
+
+#add_vehicle and add_warehouse
+from django.utils import timezone
+from django_admin.models import Vehicle, Warehouse
+
+
+# ============================================================
+# ADD VEHICLE
+# ============================================================
+def add_vehicle(request):
+    if request.method == "POST":
+        vehicle_id = request.POST.get("vehicle_id", "").strip()
+        if not vehicle_id:
+            messages.error(request, "Vehicle ID is required.")
+            return redirect("add_vehicle")
+
+        # Prevent duplicates
+        if Vehicle.objects(vehicle_id=vehicle_id).first():
+            messages.error(request, f"Vehicle '{vehicle_id}' already exists.")
+            return redirect("add_vehicle")
+
+        Vehicle(
+            vehicle_id=vehicle_id,
+            vehicle_name=request.POST.get("vehicle_name", "").strip() or None,
+            license_plate=request.POST.get("license_plate", "").strip() or None,
+            assigned_picker=request.POST.get("assigned_picker", "").strip() or None,
+            payload_capacity_kg=request.POST.get("payload_capacity_kg", "").strip() or None,
+            fuel_type=request.POST.get("fuel_type", "").strip() or None,
+            status=request.POST.get("status", "Active"),
+            created_at=timezone.now(),
+        ).save()
+
+        messages.success(request, f"✅ Vehicle '{vehicle_id}' added.")
+        return redirect("list_vehicles")
+
+    return render(request, "right_content/add_vehicle.html")
+
+
+# ============================================================
+# ADD WAREHOUSE
+# ============================================================
+def add_warehouse(request):
+    if request.method == "POST":
+        warehouse_id = request.POST.get("warehouse_id", "").strip()
+        if not warehouse_id:
+            messages.error(request, "Warehouse ID is required.")
+            return redirect("add_warehouse")
+
+        if Warehouse.objects(warehouse_id=warehouse_id).first():
+            messages.error(request, f"Warehouse '{warehouse_id}' already exists.")
+            return redirect("add_warehouse")
+
+        # Handle multi-select fields
+        assigned_vehicle_ids = request.POST.getlist("assigned_vehicle_ids")
+        assigned_picker_ids  = request.POST.getlist("assigned_picker_ids")
+
+        Warehouse(
+            warehouse_id=warehouse_id,
+            warehouse_name=request.POST.get("warehouse_name", "").strip() or None,
+            location_address=request.POST.get("location_address", "").strip() or None,
+            assigned_vehicle_ids=assigned_vehicle_ids,
+            assigned_picker_ids=assigned_picker_ids,
+            manager_contact=request.POST.get("manager_contact", "").strip() or None,
+            is_active=request.POST.get("is_active", "true"),
+            created_at=timezone.now(),
+        ).save()
+
+        messages.success(request, f"✅ Warehouse '{warehouse_id}' added.")
+        return redirect("list_warehouses")
+
+    return render(request, "right_content/add_warehouse.html")
+
+
+# ============================================================
+# API: Force refresh analysis (bypass cache)
+# ============================================================
+def api_analysis_refresh(request, identifier):
+    from django.core.cache import cache
+    cache.delete(f"analysis_summary:{identifier}")
+    return JsonResponse({"ok": True, "identifier": identifier})
+
+
+# ============================================================
+# DELETE ORDER (delete a whole uploaded CSV by identifier)
+# ============================================================
+def delete_order(request, file_id):
+    from django_admin.models import UploadedFile
+    try:
+        f = UploadedFile.objects(identifier=file_id).first()
+        if f:
+            # Delete the GridFS file too, if present
+            if f.file:
+                f.file.delete()
+            f.delete()
+            messages.success(request, f"Order '{file_id}' deleted.")
+        else:
+            messages.warning(request, f"Order '{file_id}' not found.")
+    except Exception as e:
+        messages.error(request, f"Failed to delete: {e}")
+    return redirect("list_identifiers")

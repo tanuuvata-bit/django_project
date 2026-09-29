@@ -1,0 +1,211 @@
+```html
+{% extends 'layout/index.html' %}
+
+{% block content %}
+
+<!-- Content -->
+<div class="container-xxl flex-grow-1 container-p-y">
+
+  <!-- Basic Layout -->
+  <div class="row mb-6 gy-6">
+
+    <div class="col-12">
+      <div class="card">
+      </div>
+    </div>
+
+    <div class="col-xl">
+      <div class="card">
+
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Add Vehicle</h5>
+          <small class="text-body float-end">Vehicle Details</small>
+        </div>
+
+        <div class="card-body">
+          <form method="POST" action="{% url 'add_vehicle' %}">
+            {% csrf_token %}
+
+            <!-- Vehicle ID -->
+            <div class="mb-12">
+              <label class="form-label" for="vehicle_id">Vehicle ID</label>
+
+              <div class="input-group input-group-merge">
+                <span id="vehicle-id-icon" class="input-group-text">
+                  <i class="icon-base bx bx-id-card"></i>
+                </span>
+
+                <input
+                  type="text"
+                  class="form-control"
+                  id="vehicle_id"
+                  name="vehicle_id"
+                  placeholder="VEH-101"
+                  aria-label="VEH-101"
+                  aria-describedby="vehicle-id-icon"
+                />
+              </div>
+            </div>
+
+            <!-- Vehicle Name -->
+            <div class="mb-6">
+              <label class="form-label" for="vehicle_name">Vehicle Name</label>
+
+              <div class="input-group input-group-merge">
+                <span id="vehicle-name-icon" class="input-group-text">
+                  <i class="icon-base bx bx-car"></i>
+                </span>
+
+                <input
+                  type="text"
+                  id="vehicle_name"
+                  name="vehicle_name"
+                  class="form-control"
+                  placeholder="Tata Ace"
+                  aria-label="Tata Ace"
+                  aria-describedby="vehicle-name-icon"
+                />
+              </div>
+            </div>
+
+            <!-- Vehicle No. -->
+            <div class="mb-6">
+              <label class="form-label" for="license_plate">Vehicle No.</label>
+
+              <div class="input-group input-group-merge">
+                <span id="license-plate-icon" class="input-group-text">
+                  <i class="icon-base bx bx-barcode"></i>
+                </span>
+
+                <input
+                  type="text"
+                  id="license_plate"
+                  name="license_plate"
+                  class="form-control"
+                  placeholder="DL01AB1234"
+                  aria-label="DL01AB1234"
+                  aria-describedby="license-plate-icon"
+                />
+              </div>
+            </div>
+
+            <!-- Picker Name -->
+            <div class="mb-6">
+              <label class="form-label" for="assigned_picker">Picker Name</label>
+
+              <div class="input-group input-group-merge">
+                <span id="picker-icon" class="input-group-text">
+                  <i class="icon-base bx bx-user"></i>
+                </span>
+
+                <select
+                  id="assigned_picker"
+                  name="assigned_picker"
+                  class="form-select"
+                  aria-label="Picker Name"
+                  aria-describedby="picker-icon"
+                >
+                  <option value="" selected disabled>Select Picker</option>
+                  <option value="picker_1">Picker 1</option>
+                  <option value="picker_2">Picker 2</option>
+                  <option value="picker_3">Picker 3</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Vehicle Capacity -->
+            <div class="mb-6">
+              <label class="form-label" for="payload_capacity_kg">
+                Vehicle Capacity
+              </label>
+
+              <div class="input-group input-group-merge">
+                <span id="capacity-icon" class="input-group-text">
+                  <i class="icon-base bx bx-package"></i>
+                </span>
+
+                <input
+                  type="number"
+                  id="payload_capacity_kg"
+                  name="payload_capacity_kg"
+                  class="form-control"
+                  placeholder="1000"
+                  aria-label="1000"
+                  aria-describedby="capacity-icon"
+                />
+              </div>
+            </div>
+
+            <!-- Fuel / Engine Type -->
+            <div class="mb-6">
+              <label class="form-label" for="fuel_type">
+                Fuel / Engine Type
+              </label>
+
+              <div class="input-group input-group-merge">
+                <span id="fuel-type-icon" class="input-group-text">
+                  <i class="icon-base bx bx-gas-pump"></i>
+                </span>
+
+                <select
+                  id="fuel_type"
+                  name="fuel_type"
+                  class="form-select"
+                  aria-label="Fuel / Engine Type"
+                  aria-describedby="fuel-type-icon"
+                >
+                  <option value="" selected disabled>
+                    Select Fuel / Engine Type
+                  </option>
+                  <option value="Diesel">Diesel</option>
+                  <option value="Petrol">Petrol</option>
+                  <option value="EV">EV</option>
+                  <option value="CNG">CNG</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Status -->
+            <div class="mb-6">
+              <label class="form-label" for="status">Status</label>
+
+              <div class="input-group input-group-merge">
+                <span id="status-icon" class="input-group-text">
+                  <i class="icon-base bx bx-check-circle"></i>
+                </span>
+
+                <select
+                  id="status"
+                  name="status"
+                  class="form-select"
+                  aria-label="Vehicle Status"
+                  aria-describedby="status-icon"
+                >
+                  <option value="" selected disabled>
+                    Select Status
+                  </option>
+                  <option value="Active">Active</option>
+                  <option value="Maintenance">Maintenance</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary">
+              Add Vehicle
+            </button>
+
+          </form>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+```
+
+ 

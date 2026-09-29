@@ -33,4 +33,20 @@ urlpatterns = [
     path("orders/display/",     views.display_orders,   name="display_orders"),
     path("orders/delete/<str:identifier>/",
          views.delete_identifier, name="delete_identifier"),
+    # --- NEW: Add Vehicle / Add Warehouse ---
+    path("add_vehicle/", views.add_vehicle, name="add_vehicle"),
+    path("add_warehouse/", views.add_warehouse, name="add_warehouse"),
+    #---- Analysis is added
+    path("analysis/", views.analysis_page, name="analysis_page"),
+    path("api/summary/<str:identifier>/", views.api_analysis_summary, name="api_analysis_summary"),
+    path("api/refresh/<str:identifier>/", views.api_analysis_refresh, name="api_analysis_refresh"),
+    #-----List vehicle and list warehouse
+    path("add_vehicle", views.add_vehicle, name="add_vehicle"),
+    path("list_vehicles", views.list_vehicles, name="list_vehicles"),
+    path("delete_vehicle/<str:vehicle_id>", views.delete_vehicle, name="delete_vehicle"),
+
+    path("add_warehouse", views.add_warehouse, name="add_warehouse"),
+    path("list_warehouses", views.list_warehouses, name="list_warehouses"),
+    path("delete_warehouse/<str:warehouse_id>", views.delete_warehouse, name="delete_warehouse"),
+
 ]

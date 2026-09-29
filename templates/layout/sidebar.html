@@ -66,26 +66,30 @@
           <div class="menu-inner-shadow"></div>
 
           <ul class="menu-inner py-1">
-            <!-- Dashboards -->
+
+            <!-- ============================================================ -->
+            <!-- ORDERS (with all children nested correctly)                  -->
+            <!-- ============================================================ -->
             <li class="menu-item active open">
               <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="menu-icon tf-icons bx bx-home-smile"></i>
                 <div class="text-truncate" data-i18n="orders">orders</div>
               </a>
+
               <ul class="menu-sub">
+
                 <li class="menu-item active">
                   <a href="{% url 'upload_order_form' %}" class="menu-link">
-                    <div class="text-truncate" data-i18n="uploaded orders">uploaded orders </div>
+                    <div class="text-truncate" data-i18n="uploaded orders">uploaded orders</div>
                   </a>
                 </li>
 
                 <li class="menu-item active">
                   <a href="{% url 'upload_order_form_1' %}" class="menu-link">
-                    <div class="text-truncate" data-i18n="uploaded orders 1">uploaded orders 1 </div>
+                    <div class="text-truncate" data-i18n="uploaded orders 1">uploaded orders 1</div>
                   </a>
                 </li>
 
-                <!-- ============ NEW LINKS (added) ============ -->
                 <li class="menu-item">
                   <a href="{% url 'bulk_upload' %}" class="menu-link">
                     <i class="menu-icon tf-icons bx bx-cloud-upload"></i>
@@ -106,31 +110,60 @@
                     <div class="text-truncate" data-i18n="Display Orders">Display Orders</div>
                   </a>
                 </li>
-                <!-- =========================================== -->
 
                 <li class="menu-item">
-                  <a
-                    href="#"
-                    target="_blank"
-                    class="menu-link">
+                  <a href="{% url 'add_vehicle' %}" class="menu-link">
+                    <i class="menu-icon tf-icons bx bx-car"></i>
+                    <div class="text-truncate" data-i18n="Add Vehicle">Add Vehicle</div>
+                  </a>
+                </li>
+
+                <li class="menu-item">
+                  <a href="{% url 'add_warehouse' %}" class="menu-link">
+                    <i class="menu-icon tf-icons bx bx-building-house"></i>
+                    <div class="text-truncate" data-i18n="Add Warehouse">Add Warehouse</div>
+                  </a>
+                </li>
+
+                <!-- === ANALYSIS (inside ORDERS submenu) === -->
+                <li class="menu-item">
+                  <a href="{% url 'analysis_page' %}" class="menu-link">
+                    <i class="menu-icon tf-icons bx bx-bar-chart-alt-2"></i>
+                    <div class="text-truncate" data-i18n="Analysis">Analysis</div>
+                  </a>
+                </li>
+
+                <li class="menu-item">
+                  <a href="{% url 'list_vehicles' %}" class="menu-link">
+                    <i class="menu-icon tf-icons bx bx-list-check"></i>
+                    <div class="text-truncate" data-i18n="List Vehicles">List Vehicles</div>
+                  </a>
+                </li>
+
+                <li class="menu-item">
+                  <a href="{% url 'list_warehouses' %}" class="menu-link">
+                    <i class="menu-icon tf-icons bx bx-list-check"></i>
+                    <div class="text-truncate" data-i18n="List Warehouses">List Warehouses</div>
+                  </a>
+                </li>
+                <!-- ========================================= -->
+
+                <li class="menu-item">
+                  <a href="#" target="_blank" class="menu-link">
                     <div class="text-truncate" data-i18n="clusters">clusters</div>
                     <div class="badge rounded-pill bg-label-primary text-uppercase fs-tiny ms-auto">Pro</div>
                   </a>
                 </li>
+
                 <li class="menu-item">
-                  <a
-                    href="#"
-                    target="_blank"
-                    class="menu-link">
+                  <a href="#" target="_blank" class="menu-link">
                     <div class="text-truncate" data-i18n="routers">routing</div>
                     <div class="badge rounded-pill bg-label-primary text-uppercase fs-tiny ms-auto">Pro</div>
                   </a>
                 </li>
+
                 <li class="menu-item">
-                  <a
-                    href="#"
-                    target="_blank"
-                    class="menu-link">
+                  <a href="#" target="_blank" class="menu-link">
                     <div class="text-truncate" data-i18n="distance Analysis">distance Analysis</div>
                     <div class="badge rounded-pill bg-label-primary text-uppercase fs-tiny ms-auto">Pro</div>
                   </a>
@@ -139,79 +172,57 @@
               </ul>
             </li>
 
-
-          <li class="menu-item active open">
+            <!-- ============================================================ -->
+            <!-- DRIVER MANAGEMENT                                            -->
+            <!-- ============================================================ -->
+            <li class="menu-item active open">
               <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <div class="text-truncate" data-i18n="Driver Management">Driver Management</div>
-
               </a>
               <ul class="menu-sub">
                 <li class="menu-item active">
                   <a href="{% url 'add_drivers' %}" class="menu-link">
-                    <div class="text-truncate" data-i18n="Add Drivers">Add Drivers </div>
+                    <div class="text-truncate" data-i18n="Add Drivers">Add Drivers</div>
                   </a>
                 </li>
-
                 <li class="menu-item active">
                   <a href="{% url 'list_drivers' %}" class="menu-link">
-                    <div class="text-truncate" data-i18n="List Drivers">List Drivers </div>
+                    <div class="text-truncate" data-i18n="List Drivers">List Drivers</div>
                   </a>
                 </li>
               </ul>
-          </li>
+            </li>
 
-           <li class="menu-item active open">
+            <!-- ============================================================ -->
+            <!-- DRIVER DOCUMENTS                                             -->
+            <!-- ============================================================ -->
+            <li class="menu-item active open">
               <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <div class="text-truncate" data-i18n="Driver Documents">Driver Documents</div>
-
               </a>
               <ul class="menu-sub">
                 <li class="menu-item active">
                   <a href="{% url 'driver_details' %}" class="menu-link">
-                    <div class="text-truncate" data-i18n="Drivers Details">Drivers Details </div>
+                    <div class="text-truncate" data-i18n="Drivers Details">Drivers Details</div>
                   </a>
                 </li>
-
                 <li class="menu-item active">
                   <a href="{% url 'on_demand' %}" class="menu-link">
                     <div class="text-truncate" data-i18n="On-demand">On-demand</div>
                   </a>
                 </li>
-
-
                 <li class="menu-item active">
                   <a href="{% url 'e_commerce' %}" class="menu-link">
                     <div class="text-truncate" data-i18n="E-Commerce">E-Commerce</div>
                   </a>
                 </li>
               </ul>
-           </li>
+            </li>
 
-
-
-<!--           <li class="menu-item active open">-->
-<!--              <a href="javascript:void(0);" class="menu-link menu-toggle">-->
-<!--                <div class="text-truncate" data-i18n="Order management">Order Management</div>-->
-
-<!--              </a>-->
-<!--              <ul class="menu-sub">-->
-<!--                <li class="menu-item active">-->
-<!--                  <a href="{% url 'upload_order_form' %}" class="menu-link">-->
-<!--                    <div class="text-truncate" data-i18n="E-commerce">E-commerce</div>-->
-<!--                  </a>-->
-<!--                </li>-->
-
-<!--                <li class="menu-item active">-->
-<!--                  <a href="{% url 'upload_order_form_1' %}" class="menu-link">-->
-<!--                    <div class="text-truncate" data-i18n="On-demand">On-demand</div>-->
-<!--                  </a>-->
-<!--                </li>-->
-<!--              </ul>-->
-<!--           </li>-->
-
-
-
-           <li class="menu-item active open">
+            <!-- ============================================================ -->
+            <!-- ROUTE OPTIMIZATION                                           -->
+            <!-- ============================================================ -->
+            <li class="menu-item active open">
               <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <div class="text-truncate" data-i18n="Route optimization">Route optimization</div>
               </a>
@@ -222,14 +233,14 @@
                   </a>
                 </li>
               </ul>
-           </li>
+            </li>
 
-
-
-           <li class="menu-item active open">
+            <!-- ============================================================ -->
+            <!-- TRIP DETAILS                                                 -->
+            <!-- ============================================================ -->
+            <li class="menu-item active open">
               <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <div class="text-truncate" data-i18n="Trip Details">Trip Details</div>
-
               </a>
               <ul class="menu-sub">
                 <li class="menu-item active">
@@ -237,15 +248,15 @@
                     <div class="text-truncate" data-i18n="Add Trip">Add Trip</div>
                   </a>
                 </li>
-
               </ul>
-           </li>
+            </li>
 
-
-           <li class="menu-item active open">
+            <!-- ============================================================ -->
+            <!-- FAILED ATTEMPTS                                              -->
+            <!-- ============================================================ -->
+            <li class="menu-item active open">
               <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <div class="text-truncate" data-i18n="Failed Attempts">Failed Attempts</div>
-
               </a>
               <ul class="menu-sub">
                 <li class="menu-item active">
@@ -254,89 +265,80 @@
                   </a>
                 </li>
               </ul>
-           </li>
+            </li>
 
-
-
+            <!-- ============================================================ -->
+            <!-- HUB                                                          -->
+            <!-- ============================================================ -->
             <li class="menu-item active open">
               <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <div class="text-truncate" data-i18n="Hub">Hub</div>
-
               </a>
-
-             <ul class="menu-sub">
+              <ul class="menu-sub">
                 <li class="menu-item active">
                   <a href="{% url 'add_hub' %}" class="menu-link">
                     <div class="text-truncate" data-i18n="Add Hub">Add Hub</div>
                   </a>
                 </li>
-
                 <li class="menu-item active">
                   <a href="{% url 'delete_hub' %}" class="menu-link">
                     <div class="text-truncate" data-i18n="Delete Hub">Delete Hub</div>
                   </a>
                 </li>
-
-               <li class="menu-item active">
+                <li class="menu-item active">
                   <a href="{% url 'list_hubs' %}" class="menu-link">
                     <div class="text-truncate" data-i18n="List Hub">List Hub</div>
                   </a>
                 </li>
-             </ul>
+              </ul>
             </li>
 
-
+            <!-- ============================================================ -->
+            <!-- SERVICE AREAS                                                -->
+            <!-- ============================================================ -->
             <li class="menu-item active open">
               <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <div class="text-truncate" data-i18n="Service areas">Service areas</div>
-
               </a>
-
-             <ul class="menu-sub">
+              <ul class="menu-sub">
                 <li class="menu-item active">
                   <a href="{% url 'pin_code' %}" class="menu-link">
                     <div class="text-truncate" data-i18n="Pin code">Pin code</div>
                   </a>
                 </li>
-             </ul>
+              </ul>
             </li>
 
-
-
-            <!-- Apps & Pages -->
+            <!-- ============================================================ -->
+            <!-- APPS & PAGES                                                 -->
+            <!-- ============================================================ -->
             <li class="menu-header small text-uppercase">
               <span class="menu-header-text">Apps &amp; Pages</span>
             </li>
+
             <li class="menu-item">
-              <a
-                href="#"
-                target="_blank"
-                class="menu-link">
+              <a href="#" target="_blank" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
                 <div class="text-truncate" data-i18n="Summary">Summary</div>
                 <div class="badge rounded-pill bg-label-primary text-uppercase fs-tiny ms-auto">Pro</div>
               </a>
             </li>
 
-
             <li class="menu-item">
-              <a
-                href="#"
-                target="_blank"
-                class="menu-link">
+              <a href="#" target="_blank" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
                 <div class="text-truncate" data-i18n="Chat">chat</div>
                 <div class="badge rounded-pill bg-label-primary text-uppercase fs-tiny ms-auto">Pro</div>
               </a>
             </li>
 
-              <!-- MongoDB Records Link -->
-           <li class="menu-item">
+            <!-- MongoDB Records Link -->
+            <li class="menu-item">
               <a href="{% url 'display_data' %}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-table"></i>
                 <div data-i18n="MongoDB Data">Display Records</div>
               </a>
-         </li>
+            </li>
 
           </ul>
         </aside>

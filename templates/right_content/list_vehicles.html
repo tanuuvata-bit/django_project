@@ -1,0 +1,77 @@
+{% extends "layout/body.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">🚚 Vehicle List</h3>
+    <a href="{% url 'add_vehicle' %}" class="btn btn-primary">
+      <i class="bx bx-plus"></i> Add Vehicle
+    </a>
+  </div>
+
+  {% if messages %}
+    {% for m in messages %}
+      <div class="alert alert-{{ m.tags|default:'info' }}">{{ m }}</div>
+    {% endfor %}
+  {% endif %}
+
+  {% if vehicles %}
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover table-sm align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Vehicle ID</th>
+              <th>Name</th>
+              <th>License Plate</th>
+              <th>Picker</th>
+              <th>Capacity (kg)</th>
+              <th>Fuel</th>
+              <th>Status</th>
+              <th>Added</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for v in vehicles %}
+            <tr>
+              <td><strong>{{ v.vehicle_id }}</strong></td>
+              <td>{{ v.vehicle_name|default:"—" }}</td>
+              <td>{{ v.license_plate|default:"—" }}</td>
+              <td>{{ v.assigned_picker|default:"—" }}</td>
+              <td>{{ v.payload_capacity_kg|default:"—" }}</td>
+              <td>{{ v.fuel_type|default:"—" }}</td>
+              <td>
+                {% if v.status == "Active" %}
+                  <span class="badge bg-success">{{ v.status }}</span>
+                {% elif v.status == "Maintenance" %}
+                  <span class="badge bg-warning text-dark">{{ v.status }}</span>
+                {% else %}
+                  <span class="badge bg-secondary">{{ v.status }}</span>
+                {% endif %}
+              </td>
+              <td>{{ v.created_at|date:"Y-m-d H:i" }}</td>
+              <td class="text-end">
+                <a href="{% url 'delete_vehicle' v.id %}"
+                   class="btn btn-sm btn-outline-danger"
+                   onclick="return confirm('Delete vehicle {{ v.vehicle_id }}?');">
+                  Delete
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="alert alert-info">
+    No vehicles yet. <a href="{% url 'add_vehicle' %}">Add your first vehicle</a>.
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

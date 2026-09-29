@@ -1,0 +1,85 @@
+{% extends "layout/body.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">🏭 Warehouse List</h3>
+    <a href="{% url 'add_warehouse' %}" class="btn btn-primary">
+      <i class="bx bx-plus"></i> Add Warehouse
+    </a>
+  </div>
+
+  {% if messages %}
+    {% for m in messages %}
+      <div class="alert alert-{{ m.tags|default:'info' }}">{{ m }}</div>
+    {% endfor %}
+  {% endif %}
+
+  {% if warehouses %}
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover table-sm align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Warehouse ID</th>
+              <th>Name</th>
+              <th>Address</th>
+              <th>Vehicles</th>
+              <th>Pickers</th>
+              <th>Manager</th>
+              <th>Status</th>
+              <th>Added</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for w in warehouses %}
+            <tr>
+              <td><strong>{{ w.warehouse_id|default:"—" }}</strong></td>
+              <td>{{ w.warehouse_name|default:"—" }}</td>
+              <td>{{ w.location_address|default:"—"|truncatechars:40 }}</td>
+              <td>
+                {% if w.assigned_vehicle_ids %}
+                  {% for v in w.assigned_vehicle_ids %}
+                    <span class="badge bg-primary me-1">{{ v }}</span>
+                  {% endfor %}
+                {% else %}—{% endif %}
+              </td>
+              <td>
+                {% if w.assigned_picker_ids %}
+                  {{ w.assigned_picker_ids|join:", " }}
+                {% else %}—{% endif %}
+              </td>
+              <td>{{ w.manager_contact|default:"—" }}</td>
+              <td>
+                {% if w.is_active == "true" %}
+                  <span class="badge bg-success">Active</span>
+                {% else %}
+                  <span class="badge bg-secondary">Closed</span>
+                {% endif %}
+              </td>
+              <td>{{ w.created_at|date:"Y-m-d H:i" }}</td>
+              <td class="text-end">
+                <a href="{% url 'delete_warehouse' w.id %}"
+                   class="btn btn-sm btn-outline-danger"
+                   onclick="return confirm('Delete warehouse {{ w.warehouse_id }}?');">
+                  Delete
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="alert alert-info">
+    No warehouses yet. <a href="{% url 'add_warehouse' %}">Add your first warehouse</a>.
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
