@@ -1,5 +1,6 @@
 # Core web framework
-Django>=6.1,<7.0
+#Django>=6.1,<7.0
+Django>=5.2.8,<7.0
 
 # MongoDB ORM
 mongoengine>=0.29
