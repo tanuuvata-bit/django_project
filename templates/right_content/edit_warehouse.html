@@ -1,0 +1,98 @@
+{% extends "layout/body.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">✏️ Edit Warehouse</h3>
+    <a href="{% url 'list_warehouses' %}" class="btn btn-outline-secondary">
+      ← Back to List
+    </a>
+  </div>
+
+  {% if messages %}
+    {% for m in messages %}
+      <div class="alert alert-{{ m.tags|default:'info' }}">{{ m }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <form method="post" action="{% url 'edit_warehouse' warehouse.id %}">
+        {% csrf_token %}
+
+        <div class="row g-3">
+
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">
+              Warehouse ID <span class="text-danger">*</span>
+            </label>
+            <input type="text" name="warehouse_id" class="form-control"
+                   value="{{ warehouse.warehouse_id|default:'' }}" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Warehouse Name</label>
+            <input type="text" name="warehouse_name" class="form-control"
+                   value="{{ warehouse.warehouse_name|default:'' }}">
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Location Address</label>
+            <textarea name="location_address" class="form-control" rows="3">{{ warehouse.location_address|default:'' }}</textarea>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Assigned Vehicles</label>
+            <select name="assigned_vehicle_ids" class="form-select" multiple size="5">
+              {% for opt in "VEH-101,VEH-102,VEH-103,VEH-104,VEH-105"|slice:":0" %}{% endfor %}
+              <option value="VEH-101" {% if "VEH-101" in warehouse.assigned_vehicle_ids %}selected{% endif %}>VEH-101</option>
+              <option value="VEH-102" {% if "VEH-102" in warehouse.assigned_vehicle_ids %}selected{% endif %}>VEH-102</option>
+              <option value="VEH-103" {% if "VEH-103" in warehouse.assigned_vehicle_ids %}selected{% endif %}>VEH-103</option>
+              <option value="VEH-104" {% if "VEH-104" in warehouse.assigned_vehicle_ids %}selected{% endif %}>VEH-104</option>
+              <option value="VEH-105" {% if "VEH-105" in warehouse.assigned_vehicle_ids %}selected{% endif %}>VEH-105</option>
+            </select>
+            <div class="form-text">Hold Cmd/Ctrl to select multiple.</div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Assigned Pickers</label>
+            <select name="assigned_picker_ids" class="form-select" multiple size="5">
+              <option value="picker_1" {% if "picker_1" in warehouse.assigned_picker_ids %}selected{% endif %}>Picker 1</option>
+              <option value="picker_2" {% if "picker_2" in warehouse.assigned_picker_ids %}selected{% endif %}>Picker 2</option>
+              <option value="picker_3" {% if "picker_3" in warehouse.assigned_picker_ids %}selected{% endif %}>Picker 3</option>
+            </select>
+            <div class="form-text">Hold Cmd/Ctrl to select multiple.</div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Manager / Contact</label>
+            <input type="text" name="manager_contact" class="form-control"
+                   value="{{ warehouse.manager_contact|default:'' }}">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Operating Status</label>
+            <select name="is_active" class="form-select">
+              <option value="true"  {% if warehouse.is_active == "true"  %}selected{% endif %}>Active</option>
+              <option value="false" {% if warehouse.is_active == "false" %}selected{% endif %}>Temporarily Closed</option>
+            </select>
+          </div>
+
+        </div>
+
+        <div class="mt-4">
+          <button type="submit" class="btn btn-primary">
+            <i class="bx bx-save"></i> Save Changes
+          </button>
+          <a href="{% url 'list_warehouses' %}" class="btn btn-outline-secondary">
+            Cancel
+          </a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

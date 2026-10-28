@@ -3,17 +3,22 @@
 {% block content %}
 <div class="container-fluid py-4">
 
-  <h3 class="mb-4">📊 Analysis</h3>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">📊 Analysis Dashboard</h3>
+    <small class="text-muted">Runs Polars analytics on the selected dataset</small>
+  </div>
 
   <div class="card shadow-sm mb-4">
     <div class="card-body">
       <div class="row g-3 align-items-end">
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">Select Identifier</label>
+        <div class="col-md-5">
+          <label class="form-label fw-semibold">Select Dataset</label>
           <select id="fileSelect" class="form-select">
-            <option value="">— select —</option>
-            {% for id in identifiers %}
-              <option value="{{ id }}">{{ id }}</option>
+            <option value="">— select a dataset —</option>
+            {% for f in files %}
+              <option value="{{ f.identifier }}" data-status="{{ f.status }}">
+                {{ f.identifier }} — {{ f.name }} [{{ f.status }}]
+              </option>
             {% endfor %}
           </select>
         </div>
@@ -23,190 +28,321 @@
             <span id="btnSpinner" class="spinner-border spinner-border-sm d-none ms-2"></span>
           </button>
         </div>
-        <div class="col-md-3">
-          <div id="statusBox" class="text-muted small"></div>
+        <div class="col-md-2">
+          <button id="refreshBtn" class="btn btn-outline-secondary w-100 d-none">
+            🔄 Re-run
+          </button>
+        </div>
+        <div class="col-md-2">
+          <div id="statusBox" class="small text-muted"></div>
+        </div>
+      </div>
+      <div id="progressWrap" class="mt-3 d-none">
+        <div class="progress" style="height: 8px;">
+          <div id="progressBar" class="progress-bar bg-primary"
+               role="progressbar" style="width: 0%"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <div id="charts" class="row g-4 d-none">
-
-    <div class="col-md-6">
-      <div class="card shadow-sm p-3">
-        <h6>Status Distribution</h6>
-        <div id="chartStatus"></div>
-      </div>
+  <div id="metaStrip" class="alert alert-info py-2 d-none"></div>
+  <div id="charts" class="row g-4"></div>
+  <div id="emptyState" class="text-center py-5">
+    <div class="text-muted">
+      <i class="bx bx-bar-chart-alt-2" style="font-size: 3rem;"></i>
+      <p class="mt-2">Select a dataset above and click <strong>Run Analysis</strong></p>
     </div>
-
-    <div class="col-md-6">
-      <div class="card shadow-sm p-3">
-        <h6>Top Cities</h6>
-        <div id="chartCities"></div>
-      </div>
-    </div>
-
-    <div class="col-md-6">
-      <div class="card shadow-sm p-3">
-        <h6>Top States</h6>
-        <div id="chartStates"></div>
-      </div>
-    </div>
-
-    <div class="col-md-6">
-      <div class="card shadow-sm p-3">
-        <h6>Monthly Counts</h6>
-        <div id="chartMonthly"></div>
-      </div>
-    </div>
-
-    <div class="col-md-6">
-      <div class="card shadow-sm p-3">
-        <h6>Peak Order Hours</h6>
-        <div id="chartHours"></div>
-      </div>
-    </div>
-
-    <div class="col-md-6">
-      <div class="card shadow-sm p-3">
-        <h6>Cancellations by Month</h6>
-        <div id="chartCancel"></div>
-      </div>
-    </div>
-
-    <div class="col-12">
-      <div class="card shadow-sm p-3">
-        <h6>Processing Time Distribution</h6>
-        <div id="chartProcTime"></div>
-      </div>
-    </div>
-
-    <div class="col-12">
-      <div class="card shadow-sm p-3">
-        <h6>Geographic Distribution</h6>
-        <div id="chartGeo"></div>
-      </div>
-    </div>
-
   </div>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 
 <script>
-const fileSelect  = document.getElementById("fileSelect");
-const runBtn      = document.getElementById("runBtn");
-const btnText     = document.getElementById("btnText");
-const btnSpinner  = document.getElementById("btnSpinner");
-const statusBox   = document.getElementById("statusBox");
-const chartsDiv   = document.getElementById("charts");
+const fileSelect   = document.getElementById("fileSelect");
+const runBtn       = document.getElementById("runBtn");
+const refreshBtn   = document.getElementById("refreshBtn");
+const btnText      = document.getElementById("btnText");
+const btnSpinner   = document.getElementById("btnSpinner");
+const statusBox    = document.getElementById("statusBox");
+const chartsDiv    = document.getElementById("charts");
+const metaStrip    = document.getElementById("metaStrip");
+const emptyState   = document.getElementById("emptyState");
+const progressWrap = document.getElementById("progressWrap");
+const progressBar  = document.getElementById("progressBar");
 
 fileSelect.addEventListener("change", () => {
   runBtn.disabled = !fileSelect.value;
 });
+runBtn.addEventListener("click", startAnalysis);
+refreshBtn.addEventListener("click", async () => {
+  const id = fileSelect.value;
+  if (!id) return;
+  try { await fetch(`/api/refresh/${id}/`); } catch (e) {}
+  startAnalysis();
+});
 
-runBtn.addEventListener("click", async () => {
+async function startAnalysis() {
   const id = fileSelect.value;
   if (!id) return;
 
   runBtn.disabled = true;
+  refreshBtn.classList.add("d-none");
   btnText.textContent = "Analyzing...";
   btnSpinner.classList.remove("d-none");
-  statusBox.textContent = "Computing aggregations (may take 5–15s)...";
-  chartsDiv.classList.add("d-none");
+  chartsDiv.innerHTML = "";
+  metaStrip.classList.add("d-none");
+  emptyState.classList.add("d-none");
+  progressWrap.classList.remove("d-none");
+  progressBar.style.width = "0%";
+  statusBox.textContent = "Fetching summary...";
 
   try {
     const r = await fetch(`/api/summary/${id}/`);
-    if (!r.ok) throw new Error(`Server error: ${r.status}`);
+    progressBar.style.width = "60%";
+    if (!r.ok) throw new Error(`Server returned ${r.status}`);
     const data = await r.json();
     if (data.error) throw new Error(data.error);
-
-    const p = data.phases || {};
-    chartsDiv.classList.remove("d-none");
-    statusBox.textContent = `✅ Done — ${data.meta.rows.toLocaleString()} rows analyzed`;
-
-    if (p.status_distribution)   renderDonut("chartStatus",   p.status_distribution);
-    if (p.top_cities)            renderBar("chartCities",     p.top_cities, true);
-    if (p.top_states)            renderBar("chartStates",     p.top_states, true);
-    if (p.monthly_counts)        renderLine("chartMonthly",   p.monthly_counts);
-    if (p.peak_hours)            renderArea("chartHours",     p.peak_hours);
-    if (p.cancellation_by_month) renderLineCancel("chartCancel", p.cancellation_by_month);
-    if (p.processing_time_hist)  renderBar("chartProcTime",   p.processing_time_hist, false);
-    if (p.geo_points && p.geo_points.lat && p.geo_points.lat.length) {
-      renderGeo(p.geo_points);
-    }
-
+    progressBar.style.width = "100%";
+    statusBox.textContent = "✅ Done";
+    refreshBtn.classList.remove("d-none");
+    renderSummary(data);
   } catch (e) {
+    console.error(e);
     statusBox.textContent = "❌ " + e.message;
+    chartsDiv.innerHTML =
+      `<div class="col-12"><div class="alert alert-danger">${e.message}</div></div>`;
   } finally {
     runBtn.disabled = false;
     btnText.textContent = "Run Analysis";
     btnSpinner.classList.add("d-none");
+    setTimeout(() => { progressWrap.classList.add("d-none"); }, 800);
   }
-});
-
-// ---------- Renderers (same as before) ----------
-function renderDonut(elId, {labels, values}) {
-  new ApexCharts(document.getElementById(elId), {
-    chart: { type: "donut", height: 320 },
-    series: values, labels: labels, legend: { position: "bottom" }
-  }).render();
 }
 
-function renderBar(elId, {labels, values}, horizontal) {
-  new ApexCharts(document.getElementById(elId), {
-    chart: { type: "bar", height: 340 },
-    series: [{ name: "Count", data: values }],
-    xaxis: { categories: labels },
-    plotOptions: { bar: { horizontal: !!horizontal, borderRadius: 3 } },
-    dataLabels: { enabled: false }
-  }).render();
+function renderSummary(data) {
+  const phases = Array.isArray(data.phases) ? data.phases : [];
+  const meta   = data.meta || {};
+
+  metaStrip.classList.remove("d-none");
+  metaStrip.innerHTML = `
+    <div class="d-flex flex-wrap gap-3 align-items-center">
+      <span><strong>Rows:</strong> ${(meta.rows || 0).toLocaleString()}</span>
+      <span><strong>Columns:</strong> ${meta.cols || 0}</span>
+      <span><strong>Phases:</strong> ${phases.length}</span>
+      <span class="text-muted small">${data.identifier || ''}</span>
+    </div>`;
+
+  if (!phases.length) {
+    chartsDiv.innerHTML =
+      `<div class="col-12"><div class="alert alert-warning">No phases computed for this dataset.</div></div>`;
+    return;
+  }
+
+  // Wide layouts for special charts
+  const WIDE_NAMES = new Set([
+  "top_status_paths",
+  "monthly_impact",
+  "monthly_counts",
+  "geo_points",
+  "fastest_growing_cities",
+  "growth_monthly_chart_a",
+  "growth_monthly_chart_b",
+]);
+
+  phases.forEach((phase, idx) => {
+    const elId = `chart-${idx}-${phase.name}`;
+    const isWide = WIDE_NAMES.has(phase.name) || phase.chart === "map" ||
+                   phase.chart === "grouped_bar";
+    const colClass = isWide ? "col-12" : "col-md-6";
+
+    const card = document.createElement("div");
+    card.className = colClass;
+    card.innerHTML = `
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <h6 class="card-title mb-3">${phase.title || phase.name}</h6>
+          <div id="${elId}"></div>
+        </div>
+      </div>`;
+    chartsDiv.appendChild(card);
+
+    setTimeout(() => renderPhase(phase, elId), 0);
+  });
 }
 
-function renderLine(elId, {labels, values}) {
-  new ApexCharts(document.getElementById(elId), {
-    chart: { type: "line", height: 340, zoom: { enabled: false } },
-    series: [{ name: "Count", data: values }],
-    xaxis: { categories: labels },
-    stroke: { curve: "smooth", width: 3 },
-    markers: { size: 4 }
-  }).render();
-}
+function renderPhase(phase, elId) {
+  const el = document.getElementById(elId);
+  if (!el) return;
 
-function renderLineCancel(elId, {labels, values}) {
-  new ApexCharts(document.getElementById(elId), {
-    chart: { type: "line", height: 340, zoom: { enabled: false } },
-    series: [{ name: "Cancellations", data: values }],
-    xaxis: { categories: labels },
-    stroke: { curve: "smooth", width: 3 },
-    colors: ["#ef4444"],
-    markers: { size: 4 }
-  }).render();
-}
+  const color  = phase.color  || "#6366f1";
+  const suffix = phase.suffix || "";
 
-function renderArea(elId, {labels, values}) {
-  new ApexCharts(document.getElementById(elId), {
-    chart: { type: "area", height: 340 },
-    series: [{ name: "Orders", data: values }],
-    xaxis: { categories: labels },
-    stroke: { curve: "smooth", width: 2 },
-    fill: { type: "gradient" }
-  }).render();
-}
+  switch (phase.chart) {
 
-function renderGeo({lat, lon}) {
-  const trace = {
-    type: "scattermapbox", mode: "markers",
-    lat: lat, lon: lon,
-    marker: { size: 6, color: "#6366f1", opacity: 0.6 },
-    hoverinfo: "skip"
-  };
-  Plotly.newPlot("chartGeo", [trace], {
-    mapbox: { style: "open-street-map", zoom: 4, center: { lat: lat[0], lon: lon[0] } },
-    margin: { t: 0, b: 0, l: 0, r: 0 },
-    height: 500
-  }, { displayModeBar: false });
+    case "donut":
+      new ApexCharts(el, {
+        chart:  { type: "donut", height: 340 },
+        series: phase.values,
+        labels: phase.labels,
+        legend: { position: "bottom" },
+        colors: phase.colors || ["#6366f1", "#10b981", "#ef4444",
+                                 "#f59e0b", "#8b5cf6", "#ec4899"],
+        dataLabels: { enabled: true, formatter: (val) => val.toFixed(1) + "%" },
+        plotOptions: {
+          pie: {
+            donut: {
+              size: "60%",
+              labels: {
+                show: true,
+                total: {
+                  show: true, label: "Total",
+                  formatter: (w) => w.globals.seriesTotals
+                    .reduce((a, b) => a + b, 0).toLocaleString()
+                }
+              }
+            }
+          }
+        }
+      }).render();
+      break;
+        case "multi_line":
+      new ApexCharts(el, {
+        chart:  {
+          type: "line",
+          height: 400,
+          zoom: { enabled: false },
+          toolbar: { show: false }
+        },
+        series: phase.series.map(s => ({
+          name: s.name,
+          data: s.values
+        })),
+        xaxis: {
+          categories: phase.labels,
+          title: { text: "Month" }
+        },
+        yaxis: {
+          title: { text: "Orders" }
+        },
+        stroke: { curve: "smooth", width: 3 },
+        markers: { size: 4 },
+        colors: [
+          "#6366f1", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6",
+          "#ec4899", "#14b8a6", "#f97316", "#0ea5e9", "#a855f7"
+        ],
+        legend: { position: "bottom", horizontalAlign: "left" },
+        dataLabels: { enabled: false }
+      }).render();
+      break;
+
+    case "h_bar":
+      new ApexCharts(el, {
+        chart:  { type: "bar", height: 380, toolbar: { show: false } },
+        series: [{ name: "Count", data: phase.values }],
+        xaxis:  { categories: phase.labels },
+        plotOptions: { bar: { horizontal: true, borderRadius: 4 } },
+        colors:     [color],
+        dataLabels: {
+          enabled: true,
+          formatter: (val) => Number(val).toLocaleString() + suffix
+        }
+      }).render();
+      break;
+
+    case "column":
+      new ApexCharts(el, {
+        chart:  { type: "bar", height: 380, toolbar: { show: false } },
+        series: [{ name: "Count", data: phase.values }],
+        xaxis:  { categories: phase.labels },
+        plotOptions: { bar: { columnWidth: "60%", borderRadius: 4 } },
+        colors:     [color],
+        dataLabels: {
+          enabled: true,
+          formatter: (val) => Number(val).toLocaleString()
+        }
+      }).render();
+      break;
+
+    case "line":
+      new ApexCharts(el, {
+        chart:  { type: "line", height: 340, zoom: { enabled: false } },
+        series: [{ name: "Count", data: phase.values }],
+        xaxis:  { categories: phase.labels },
+        stroke: { curve: "smooth", width: 3 },
+        markers: { size: 5 },
+        colors: [color],
+        dataLabels: { enabled: false }
+      }).render();
+      break;
+
+    case "line_cancel":
+      new ApexCharts(el, {
+        chart:  { type: "line", height: 340, zoom: { enabled: false } },
+        series: [{ name: "Cancellations", data: phase.values }],
+        xaxis:  { categories: phase.labels },
+        stroke: { curve: "smooth", width: 3 },
+        markers: { size: 5 },
+        colors: ["#ef4444"],
+        dataLabels: { enabled: false }
+      }).render();
+      break;
+
+    case "area":
+      new ApexCharts(el, {
+        chart:  { type: "area", height: 340 },
+        series: [{ name: "Orders", data: phase.values }],
+        xaxis:  { categories: phase.labels },
+        stroke: { curve: "smooth", width: 2 },
+        fill:   { type: "gradient" },
+        colors: ["#8b5cf6"],
+        dataLabels: { enabled: false }
+      }).render();
+      break;
+
+    case "grouped_bar":
+      new ApexCharts(el, {
+        chart:  { type: "bar", height: 380, toolbar: { show: false } },
+        series: phase.series.map(s => ({
+          name: s.name, data: s.values, color: s.color
+        })),
+        xaxis:  { categories: phase.labels },
+        plotOptions: { bar: { columnWidth: "50%", borderRadius: 4 } },
+        dataLabels: {
+          enabled: true,
+          formatter: (val) => val.toFixed(1) + "%"
+        },
+        legend: { position: "bottom" }
+      }).render();
+      break;
+
+    case "map":
+      if (!phase.lat || !phase.lon || !phase.lat.length) {
+        el.innerHTML = `<p class="text-muted">No valid coordinates in dataset.</p>`;
+        return;
+      }
+      Plotly.newPlot(el, [{
+        type: "scattermapbox", mode: "markers",
+        lat: phase.lat, lon: phase.lon,
+        marker: { size: 6, color: "#6366f1", opacity: 0.6 },
+        hoverinfo: "skip"
+      }], {
+        mapbox: {
+          style: "open-street-map", zoom: 4,
+          center: { lat: phase.lat[0], lon: phase.lon[0] }
+        },
+        margin: { t: 0, b: 0, l: 0, r: 0 },
+        height: 500
+      }, { displayModeBar: false, responsive: true });
+      break;
+
+
+    default:
+      el.innerHTML =
+        `<p class="text-muted small">Unsupported chart type: ${phase.chart}</p>`;
+  }
 }
 </script>
 {% endblock %}

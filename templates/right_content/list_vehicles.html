@@ -23,21 +23,21 @@
         <table class="table table-hover table-sm align-middle mb-0">
           <thead class="table-light">
             <tr>
-              <th>Vehicle ID</th>
+              <th style="white-space: nowrap; width: 100px;">Vehicle ID</th>
               <th>Name</th>
               <th>License Plate</th>
               <th>Picker</th>
-              <th>Capacity (kg)</th>
+              <th style="white-space: nowrap;">Capacity (kg)</th>
               <th>Fuel</th>
               <th>Status</th>
-              <th>Added</th>
-              <th class="text-end">Actions</th>
+              <th style="white-space: nowrap;">Added</th>
+              <th class="text-end" style="white-space: nowrap; width: 160px;">Actions</th>
             </tr>
           </thead>
           <tbody>
             {% for v in vehicles %}
             <tr>
-              <td><strong>{{ v.vehicle_id }}</strong></td>
+              <td><strong>{{ v.vehicle_id|default:"—" }}</strong></td>
               <td>{{ v.vehicle_name|default:"—" }}</td>
               <td>{{ v.license_plate|default:"—" }}</td>
               <td>{{ v.assigned_picker|default:"—" }}</td>
@@ -52,8 +52,12 @@
                   <span class="badge bg-secondary">{{ v.status }}</span>
                 {% endif %}
               </td>
-              <td>{{ v.created_at|date:"Y-m-d H:i" }}</td>
-              <td class="text-end">
+              <td style="white-space: nowrap;">{{ v.created_at|date:"Y-m-d H:i" }}</td>
+              <td class="text-end" style="white-space: nowrap;">
+                <a href="{% url 'edit_vehicle' v.id %}"
+                   class="btn btn-sm btn-outline-primary me-1">
+                  Edit
+                </a>
                 <a href="{% url 'delete_vehicle' v.id %}"
                    class="btn btn-sm btn-outline-danger"
                    onclick="return confirm('Delete vehicle {{ v.vehicle_id }}?');">

@@ -1,0 +1,222 @@
+{% extends "layout/body.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">📊 Route Planning Analysis</h3>
+    <select id="datasetSelect" class="form-select w-auto" style="min-width: 250px;">
+      <option value="">— Select Dataset —</option>
+      {% for id in identifiers %}
+        <option value="{{ id }}">{{ id }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div id="loading" class="text-center py-5 d-none">
+    <div class="spinner-border text-primary" role="status"></div>
+    <p class="mt-3 text-muted">Loading analysis...</p>
+  </div>
+
+  <div id="dashboard" class="row g-4 d-none">
+
+    <!-- 1. Scatter Plot -->
+    <div class="col-12">
+      <div class="card shadow-sm p-3">
+        <h6 class="card-title mb-1">Item Count vs Processing Time</h6>
+        <p class="text-muted small mb-3">Order-level view. Red line shows the trend.</p>
+        <div id="scatterChart"></div>
+      </div>
+    </div>
+
+    <!-- 2. Category Chart -->
+    <div class="col-12">
+      <div class="card shadow-sm p-3">
+        <h6 class="card-title mb-1">Median Time PER ITEM by Electronic Item</h6>
+        <p class="text-muted small mb-3">Outliers removed for clarity.</p>
+        <div id="categoryChart"></div>
+      </div>
+    </div>
+
+    <!-- 3. Summary Table -->
+    <div class="col-12">
+      <div class="card shadow-sm p-3">
+        <h6 class="card-title mb-3">Summary Statistics by Item Range</h6>
+        <div class="table-responsive">
+          <table class="table table-hover table-sm align-middle" id="summaryTable">
+            <thead class="table-light">
+              <tr>
+                <th>Item Range</th><th>Total Orders</th><th>Avg Time (Mins)</th>
+                <th>Min</th><th>Max</th><th>95th %ile</th><th>Avg Time / Item</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Outliers Table -->
+    <div class="col-12">
+      <div class="card shadow-sm p-3">
+        <h6 class="card-title mb-1">Outlier Traceability (Z-Score > 2)</h6>
+        <p class="text-muted small mb-3">Orders that took significantly longer than expected.</p>
+        <div class="table-responsive">
+          <table class="table table-hover table-sm align-middle" id="outlierTable">
+            <thead class="table-light">
+              <tr>
+                <th>Order ID</th><th>Warehouse</th><th>Items</th>
+                <th>Actual Time</th><th>Expected</th><th>Z-Score</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Mixed vs Pure Orders Table -->
+    <div class="col-12">
+      <div class="card shadow-sm p-3">
+        <h6 class="card-title mb-1">Mixed vs Pure Orders (Oct 9 - Oct 16)</h6>
+        <p class="text-muted small mb-3">Time per item in mixed orders vs orders with only that item.</p>
+        <div class="table-responsive">
+          <table class="table table-hover table-sm align-middle" id="mixedPureTable">
+            <thead class="table-light">
+              <tr>
+                <th>Item</th><th>Mixed Order Median (mins)</th><th>Pure Order Median (mins)</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
+
+{% verbatim %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const select   = document.getElementById("datasetSelect");
+  const loading  = document.getElementById("loading");
+  const dash     = document.getElementById("dashboard");
+  let charts = {};
+
+  if (!select) return;
+
+  select.addEventListener("change", async () => {
+    const id = select.value;
+    if (!id) { dash.classList.add("d-none"); return; }
+
+    dash.classList.add("d-none");
+    loading.classList.remove("d-none");
+
+    try {
+      const res = await fetch(`/api/sales/${id}/`);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      loading.classList.add("d-none");
+      dash.classList.remove("d-none");
+
+      // Delay drawing the chart by 100ms so the browser can un-hide the container
+      setTimeout(() => {
+          renderDashboard(data);
+      }, 100);
+
+    } catch (e) {
+      alert("Error: " + e.message);
+      loading.classList.add("d-none");
+    }
+  });
+
+  function renderDashboard(data) {
+      Object.values(charts).forEach(c => c.destroy());
+      charts = {};
+
+      // 1. Scatter
+      const scatterSeries = [{
+          name: "Orders", type: "scatter", color: "#6366f1",
+          data: data.scatter.points, markers: {size: 4, opacity: 0.5}
+      }];
+      if (data.scatter.trend && data.scatter.trend.length > 0) {
+          scatterSeries.push({
+              name: "Trendline", type: "line", color: "#ef4444",
+              stroke: {width: 3, curve: "straight"}, markers: {size: 0},
+              data: data.scatter.trend
+          });
+      }
+      charts.scatter = new ApexCharts(document.getElementById('scatterChart'), {
+          chart: {type: "scatter", height: 400, toolbar: {show: false}},
+          series: scatterSeries,
+          xaxis: {
+              title: {text: "Number of Items"},
+              tickAmount: 10,
+              labels: {
+                  formatter: function (val) { return Math.round(val); }
+              }
+          },
+          yaxis: {
+              title: {text: "Processing Time (Mins)"},
+              labels: {
+                  formatter: function (val) { return Math.round(val); }
+              }
+          }
+      });
+      charts.scatter.render();
+
+      // 2. Category Chart
+      charts.category = new ApexCharts(document.getElementById('categoryChart'), {
+          chart: {type: "bar", height: 400, toolbar: {show: false}},
+          series: [{name: "Mins / Item", data: data.categories.map(c => c.value)}],
+          xaxis: {
+              categories: data.categories.map(c => c.label),
+              labels: { maxWidth: 250 }
+          },
+          plotOptions: {bar: {horizontal: true, borderRadius: 4}},
+          colors: ["#10b981"],
+          dataLabels: {enabled: true, formatter: (val) => val + ' mins'}
+      });
+      charts.category.render();
+
+      // 3. Summary Table
+      const tbody = document.querySelector("#summaryTable tbody");
+      tbody.innerHTML = data.summary.map(r => `
+        <tr>
+            <td>${r.range}</td><td>${r.orders}</td><td>${r.avg}</td>
+            <td>${r.min}</td><td>${r.max}</td><td>${r.p95}</td><td>${r.avg_per_item}</td>
+        </tr>
+      `).join("");
+
+      // 4. Outliers Table
+      const otbody = document.querySelector("#outlierTable tbody");
+      otbody.innerHTML = data.outliers.map(r => `
+        <tr>
+            <td><strong>${r.order_id}</strong></td><td>${r.warehouse}</td><td>${r.items}</td>
+            <td class="text-danger fw-bold">${r.time} mins</td>
+            <td>${r.expected} mins</td>
+            <td><span class="badge bg-danger">+${r.z}σ</span></td>
+        </tr>
+      `).join("");
+
+      // 5. Mixed vs Pure Table
+      const mptbody = document.querySelector("#mixedPureTable tbody");
+      mptbody.innerHTML = data.mixed_pure.map(r => `
+        <tr>
+            <td><strong>${r.item}</strong></td>
+            <td>${r.mixed_median} mins</td>
+            <td>${r.pure_median} mins</td>
+        </tr>
+      `).join("");
+
+      window.dispatchEvent(new Event("resize"));
+  }
+});
+</script>
+{% endverbatim %}
+{% endblock %}

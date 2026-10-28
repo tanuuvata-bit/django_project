@@ -394,10 +394,13 @@ from django.core.cache import cache
 def analysis_page(request):
     """Renders the ANALYSIS page + dropdown of uploaded identifiers."""
     identifiers = sorted(OrderRecord.objects.distinct("identifier"))
+    files = [
+        {"identifier": ident, "name": ident, "status": "completed"}
+        for ident in identifiers
+    ]
     return render(request, "right_content/analysis.html", {
-        "identifiers": identifiers,
+        "files": files,
     })
-
 
 
 # API: Synchronous summary generation
@@ -518,3 +521,133 @@ def delete_order(request, file_id):
     except Exception as e:
         messages.error(request, f"Failed to delete: {e}")
     return redirect("list_identifiers")
+
+# ============================================================
+# EDIT VEHICLE
+# ============================================================
+def edit_vehicle(request, vehicle_id):
+    """
+    Show the edit form (GET) or save changes (POST).
+    vehicle_id here is the MongoDB ObjectId (v.id), not vehicle_id.
+    """
+    from bson import ObjectId
+
+    # Find by MongoDB _id
+    try:
+        vehicle = Vehicle.objects(id=ObjectId(vehicle_id)).first()
+    except Exception:
+        vehicle = None
+
+    if not vehicle:
+        messages.error(request, "Vehicle not found.")
+        return redirect("list_vehicles")
+
+    if request.method == "POST":
+        # Update fields from the form
+        new_vehicle_id = request.POST.get("vehicle_id", "").strip()
+
+        if not new_vehicle_id:
+            messages.error(request, "Vehicle ID is required.")
+            return redirect("edit_vehicle", vehicle_id=vehicle_id)
+
+        # Check for duplicate vehicle_id (only if it changed)
+        if new_vehicle_id != vehicle.vehicle_id:
+            if Vehicle.objects(vehicle_id=new_vehicle_id).first():
+                messages.error(request, f"Vehicle ID '{new_vehicle_id}' already exists.")
+                return redirect("edit_vehicle", vehicle_id=vehicle_id)
+
+        # Apply updates
+        vehicle.vehicle_id          = new_vehicle_id
+        vehicle.vehicle_name        = request.POST.get("vehicle_name", "").strip() or None
+        vehicle.license_plate       = request.POST.get("license_plate", "").strip() or None
+        vehicle.assigned_picker     = request.POST.get("assigned_picker", "").strip() or None
+        vehicle.payload_capacity_kg = request.POST.get("payload_capacity_kg", "").strip() or None
+        vehicle.fuel_type           = request.POST.get("fuel_type", "").strip() or None
+        vehicle.status              = request.POST.get("status", "Active")
+        vehicle.save()
+
+        messages.success(request, f"✅ Vehicle '{new_vehicle_id}' updated.")
+        return redirect("list_vehicles")
+
+    # GET — render form pre-filled with existing values
+    return render(request, "right_content/edit_vehicle.html", {
+        "vehicle": vehicle,
+    })
+
+
+# ============================================================
+# EDIT WAREHOUSE
+# ============================================================
+def edit_warehouse(request, warehouse_id):
+    """
+    Show the edit form (GET) or save changes (POST).
+    warehouse_id here is the MongoDB ObjectId (w.id).
+    """
+    from bson import ObjectId
+
+    try:
+        warehouse = Warehouse.objects(id=ObjectId(warehouse_id)).first()
+    except Exception:
+        warehouse = None
+
+    if not warehouse:
+        messages.error(request, "Warehouse not found.")
+        return redirect("list_warehouses")
+
+    if request.method == "POST":
+        new_warehouse_id = request.POST.get("warehouse_id", "").strip()
+
+        if not new_warehouse_id:
+            messages.error(request, "Warehouse ID is required.")
+            return redirect("edit_warehouse", warehouse_id=warehouse_id)
+
+        # Check for duplicate warehouse_id (only if it changed)
+        if new_warehouse_id != warehouse.warehouse_id:
+            if Warehouse.objects(warehouse_id=new_warehouse_id).first():
+                messages.error(request, f"Warehouse ID '{new_warehouse_id}' already exists.")
+                return redirect("edit_warehouse", warehouse_id=warehouse_id)
+
+        # Multi-select fields
+        assigned_vehicle_ids = request.POST.getlist("assigned_vehicle_ids")
+        assigned_picker_ids  = request.POST.getlist("assigned_picker_ids")
+
+        # Apply updates
+        warehouse.warehouse_id         = new_warehouse_id
+        warehouse.warehouse_name       = request.POST.get("warehouse_name", "").strip() or None
+        warehouse.location_address     = request.POST.get("location_address", "").strip() or None
+        warehouse.assigned_vehicle_ids = assigned_vehicle_ids
+        warehouse.assigned_picker_ids  = assigned_picker_ids
+        warehouse.manager_contact      = request.POST.get("manager_contact", "").strip() or None
+        warehouse.is_active            = request.POST.get("is_active", "true")
+        warehouse.save()
+
+        messages.success(request, f"✅ Warehouse '{new_warehouse_id}' updated.")
+        return redirect("list_warehouses")
+
+    return render(request, "right_content/edit_warehouse.html", {
+        "warehouse": warehouse,
+    })
+
+
+# ============================================================
+# SALES ANALYSIS (dedicated page)
+# ============================================================
+from my_website.analytics.sales_engine import analyze_sales
+
+def sales_analysis_page(request):
+    """Renders the dedicated Sales Analysis page."""
+    identifiers = sorted(OrderRecord.objects.distinct("identifier"))
+    return render(request, "right_content/sales_analysis.html", {
+        "identifiers": identifiers,
+    })
+
+
+def api_sales_summary(request, identifier):
+    """API endpoint for the Sales Analysis page."""
+    try:
+        data = analyze_sales(identifier)
+        return JsonResponse(data)
+    except Exception as e:
+        return JsonResponse({"error": str(e)[:500]}, status=500)
+
+

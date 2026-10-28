@@ -44,9 +44,17 @@ urlpatterns = [
     path("add_vehicle", views.add_vehicle, name="add_vehicle"),
     path("list_vehicles", views.list_vehicles, name="list_vehicles"),
     path("delete_vehicle/<str:vehicle_id>", views.delete_vehicle, name="delete_vehicle"),
+    # Vehicle edit
+    path("edit_vehicle/<str:vehicle_id>", views.edit_vehicle, name="edit_vehicle"),
 
     path("add_warehouse", views.add_warehouse, name="add_warehouse"),
     path("list_warehouses", views.list_warehouses, name="list_warehouses"),
     path("delete_warehouse/<str:warehouse_id>", views.delete_warehouse, name="delete_warehouse"),
+    # Warehouse edit
+    path("edit_warehouse/<str:warehouse_id>", views.edit_warehouse, name="edit_warehouse"),
+    #for the route planning
+    path("analysis/sales/", views.sales_analysis_page, name="sales_analysis_page"),
+    path("api/sales/<str:identifier>/", views.api_sales_summary, name="api_sales_summary"),
+
 
 ]
