@@ -15,6 +15,22 @@
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
 
+                <!-- File Type / Engine Selector -->
+                <div class="mb-3">
+                    <label for="file_type" class="form-label fw-semibold">
+                        Analysis Engine / File Type <span class="text-danger">*</span>
+                    </label>
+                    <select name="file_type" id="file_type" class="form-select" required>
+                        <option value="generic_csv">Standard Orders CSV (Generic Engine)</option>
+                        <option value="sales_csv">Sales / Item Analysis CSV (Pandas Engine)</option>
+                        <option value="route_json">Route Planning JSON (Route Engine)</option>
+                        <option value="three_csv_route">3-CSV Route Analysis (Time + Date + Product)</option>
+                    </select>
+                    <div class="form-text">
+                        Select the engine that should process this file. This routes your data to the correct analysis view.
+                    </div>
+                </div>
+
                 <div class="mb-3">
                     <label for="identifier" class="form-label fw-semibold">
                         Identifier <span class="text-danger">*</span>
@@ -23,16 +39,17 @@
                            class="form-control" required
                            placeholder="e.g. oct-2025-batch1">
                     <div class="form-text">
-                        Unique name for this upload. You will select it later from the List page.
+                        Unique name for this upload. You will select it later from the Analysis page.
                     </div>
                 </div>
 
                 <div class="mb-3">
                     <label for="csv_file" class="form-label fw-semibold">
-                        CSV File <span class="text-danger">*</span>
+                        Data File <span class="text-danger">*</span>
                     </label>
+                    <!-- Updated to accept both CSV and JSON -->
                     <input type="file" name="csv_file" id="csv_file"
-                           accept=".csv" class="form-control" required>
+                           accept=".csv, .json" class="form-control" required>
                 </div>
 
                 <div class="form-check mb-3">

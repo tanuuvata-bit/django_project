@@ -52,9 +52,7 @@ urlpatterns = [
     path("delete_warehouse/<str:warehouse_id>", views.delete_warehouse, name="delete_warehouse"),
     # Warehouse edit
     path("edit_warehouse/<str:warehouse_id>", views.edit_warehouse, name="edit_warehouse"),
-    #for the route planning
-    path("analysis/sales/", views.sales_analysis_page, name="sales_analysis_page"),
-    path("api/sales/<str:identifier>/", views.api_sales_summary, name="api_sales_summary"),
+
 
 
 ]

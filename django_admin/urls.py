@@ -1,74 +1,3 @@
-# """
-# URL configuration for django_admin project.
-#
-# The `urlpatterns` list routes URLs to views. For more information please see:
-#     https://docs.djangoproject.com/en/4.2/topics/http/urls/
-# Examples:
-# Function views
-#     1. Add an import:  from my_app import views
-#     2. Add a URL to urlpatterns:  path('', views.home, name='home')
-# Class-based views
-#     1. Add an import:  from other_app.views import Home
-#     2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-# Including another URLconf
-#     1. Import the include() function: from django.urls import include, path
-#     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-# """
-# from django.contrib import admin
-# from django.urls import path,include
-# from . import views
-# from myapp.views import display_data
-#
-# urlpatterns = [
-#     path('admin/', admin.site.urls),
-#     path("",views.index,name="index"),
-#     path("upload-order-form", views.upload_order_form, name="upload_order_form"),
-#     path("upload-order-form-1",  views.upload_order_form1, name="upload_order_form_1"),
-#     path("add_drivers", views.add_drivers, name="add_drivers"),
-#     path("list_drivers", views.list_drivers, name="list_drivers"),
-#     path("driver_details", views.driver_details, name="driver_details"),
-#     path("on_demand", views.on_demand, name="on_demand"),
-#     path("e_commerce", views.e_commerce, name="e_commerce"),
-#     path("active_routes", views.active_routes, name="active_routes"),
-#     path("add_trip", views.add_trip, name="add_trip"),
-#     path("failed", views.failed, name="failed"),
-#     path("add_hub", views.add_hub, name="add_hub"),
-#     path("delete_hub", views.delete_hub, name="delete_hub"),
-#     path("list_hubs", views.list_hubs, name="list_hubs"),
-#     path("pin_code", views.pin_code, name="pin_code"),
-#     path('admin/', admin.site.urls),
-#     path('display/', display_data, name='display_data'),
-#     path("orders/bulk-upload/", views.bulk_upload,      name="bulk_upload"),
-#     path("orders/list/",        views.list_identifiers, name="list_identifiers"),
-#     path("orders/display/",     views.display_orders,   name="display_orders"),
-#     path("orders/delete/<str:identifier>/",
-#          views.delete_identifier, name="delete_identifier"),
-# ]
-#
-# from django.contrib import admin
-# from django.urls import path
-# # from myapp.views import display_data  # Replace 'myapp' with your actual app name
-#
-# # urlpatterns = [
-# #     path('admin/', admin.site.urls),
-# #     path('display/', display_data, name='display_data'),
-# # ]
-# # django_admin/urls.py
-# from django.urls import path
-# from django_admin import views
-# # i basically added this code
-# # urlpatterns = [
-# #     # ... your existing routes ...
-# #
-# #     # --- ORDERS: Bulk Upload / List / Display ---
-# #     path("orders/bulk-upload/", views.bulk_upload,      name="bulk_upload"),
-# #     path("orders/list/",        views.list_identifiers, name="list_identifiers"),
-# #     path("orders/display/",     views.display_orders,   name="display_orders"),
-# #     path("orders/delete/<str:identifier>/",
-# #          views.delete_identifier, name="delete_identifier"),
-# # ]
-
-
 # django_admin/urls.py
 from django.contrib import admin
 from django.urls import path
@@ -94,5 +23,29 @@ urlpatterns = [
     path("list_hubs",      views.list_hubs,      name="list_hubs"),
     path("pin_code",       views.pin_code,       name="pin_code"),
 
-]
+    # --- ORDERS / BULK UPLOAD ---
+    path("display/", views.display_data, name="display_data"),
+    path("orders/bulk-upload/", views.bulk_upload, name="bulk_upload"),
+    path("orders/list/", views.list_identifiers, name="list_identifiers"),
+    path("orders/display/", views.display_orders, name="display_orders"),
+    path("orders/delete/<str:identifier>/", views.delete_identifier, name="delete_identifier"),
 
+    # --- VEHICLES ---
+    path("add_vehicle", views.add_vehicle, name="add_vehicle"),
+    path("list_vehicles", views.list_vehicles, name="list_vehicles"),
+    path("delete_vehicle/<str:vehicle_id>", views.delete_vehicle, name="delete_vehicle"),
+    path("edit_vehicle/<str:vehicle_id>", views.edit_vehicle, name="edit_vehicle"),
+
+    # --- WAREHOUSES ---
+    path("add_warehouse", views.add_warehouse, name="add_warehouse"),
+    path("list_warehouses", views.list_warehouses, name="list_warehouses"),
+    path("delete_warehouse/<str:warehouse_id>", views.delete_warehouse, name="delete_warehouse"),
+    path("edit_warehouse/<str:warehouse_id>", views.edit_warehouse, name="edit_warehouse"),
+
+    # --- ANALYSIS ---
+    path("analysis/", views.analysis_page, name="analysis_page"),
+    path("api/summary/<str:identifier>/", views.api_analysis_summary, name="api_analysis_summary"),
+    path("api/refresh/<str:identifier>/", views.api_analysis_refresh, name="api_analysis_refresh"),
+    path("analysis/sales/", views.sales_analysis_page, name="sales_analysis_page"),
+    path("api/sales/<str:identifier>/", views.api_sales_summary, name="api_sales_summary"),
+]
